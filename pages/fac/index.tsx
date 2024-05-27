@@ -1,11 +1,9 @@
-
-
 const FacIndexPage = () => {
-    return(
-        <div>
-            <div></div>
-        </div>
-    )
-}
+	return (
+		<div>
+			<div>FacIndexPage</div>
+		</div>
+	);
+};
 
 export default FacIndexPage;

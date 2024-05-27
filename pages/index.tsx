@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { HomeModernIcon } from '@heroicons/react/24/solid';
 import React from 'react';
 
+// '/'
 const MainPage = () => {
 	return (
 		<div className="flex flex-col w-full pb-[90px]">
@@ -122,8 +123,8 @@ const FilterButton = ({ name, icon, onButtonClick }: FilterButtonProps) => {
 	);
 };
 
-const Line = () => {
-	return <div className="w-full h-[4px] bg-zinc-100 my-8"></div>;
+export const Line = () => {
+	return <div className="w-full h-[8px] bg-zinc-100 my-8"></div>;
 };
 
 interface MainTitleProps {
