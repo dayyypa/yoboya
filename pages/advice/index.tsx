@@ -5,7 +5,7 @@ const AdviceIndexPage = () => {
 	const router = useRouter();
 
 	return (
-		<div className="w-full flex flex-col">
+		<div className="w-full flex flex-col mt-3">
 			<div className="flex flex-col space-y-4">
 				<div className="text-[18px] font-bold">상담사레</div>
 				<div className="flex justify-between">
