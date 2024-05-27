@@ -22,15 +22,15 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/advice": [
+    "/advice/[id]": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/advice.js"
+      "static/chunks/pages/advice/[id].js"
     ],
-    "/fac": [
+    "/my": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/fac.js"
+      "static/chunks/pages/my.js"
     ]
   },
   "ampFirstPages": []

@@ -20,7 +20,6 @@ const AdviceDetailPage = () => {
 				<FontAwesomeIcon
 					icon={faHouse}
 					className="cursor-pointer w-5 h-5"
-					// 어떻게 홈 화면으로 보내는지?
 					onClick={() => {
 						router.push('/');
 					}}
