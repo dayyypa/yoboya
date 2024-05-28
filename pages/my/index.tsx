@@ -22,7 +22,9 @@ const MyIndexPage = () => {
 						<span className="text-blue-500">요양상담</span>을 시작하세요!
 					</div>
 				</div>
-				<button className="bg-blue-500 text-white py-3 rounded-lg font-semibold ">로그인/회원가입</button>
+				<button className="bg-blue-500 hover:bg-blue-400 text-white py-3 rounded-lg font-semibold ">
+					로그인/회원가입
+				</button>
 				<div className="flex font-semibold ">
 					<div className="flex flex-col items-center justify-center space-y-3 hover:bg-gray-100 rounded-lg p-4 cursor-pointer w-1/4">
 						<FontAwesomeIcon icon={faHeart} className="w-9 h-9" />

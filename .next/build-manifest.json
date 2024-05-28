@@ -22,10 +22,15 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/advice/[id]": [
+    "/advice": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/advice/[id].js"
+      "static/chunks/pages/advice.js"
+    ],
+    "/fac": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/fac.js"
     ],
     "/my": [
       "static/chunks/webpack.js",
