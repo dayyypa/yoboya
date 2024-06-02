@@ -5,48 +5,97 @@ import {
 	HomeIcon
 } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/router';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useEffect } from 'react';
 import { cls } from '../libs/utility';
+import { atom, useRecoilState } from 'recoil';
+import { supabase } from '../libs/supabaseClient';
+import { loginUserState } from '../libs/store';
+import Toast from '../components/toast';
 
 interface LayoutProps extends PropsWithChildren {
 	//
+	hideNavigation?: boolean;
 }
 
-export const Layout = ({ children }: LayoutProps) => {
+export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 	const router = useRouter();
+	const [, setLoginUser] = useRecoilState(loginUserState);
+	const [toastState, setToastState] = useRecoilState(ToastState);
+
+	//토스트
+	useEffect(() => {
+		if (toastState.isShown) {
+			let timer = setTimeout(() => {
+				setToastState((prev) => ({ ...prev, isShown: false }));
+			}, toastState?.setTime ?? 1500);
+
+			return () => {
+				clearTimeout(timer);
+			};
+		}
+	}, [toastState, setToastState]);
+
+	useEffect(() => {
+		const { data } = supabase.auth.onAuthStateChange((event, session) => {
+			if (session?.user) {
+				setLoginUser(session.user);
+			} else {
+				setLoginUser(null);
+			}
+		});
+
+		return () => {
+			data.subscription.unsubscribe();
+		};
+	}, []);
 
 	return (
-		<div className="w-full">
-			<div className="flex justify-center w-full">
-				<div className="flex flex-col w-full">
-					<div className="w-full max-w-[640px] mx-auto">{children}</div>
-					<div className="fixed inset-x-0 bottom-0 w-full h-[70px] border-t border-gray-200 bg-white z-10">
-						<div className="grid w-full max-w-[640px] h-full grid-cols-4 mx-auto">
-							<NaviButton
-								type="home"
-								onButtonClicked={() => router.push('/')}
-								selected={router.asPath === '/'}
-							/>
-							<NaviButton
-								type="fac"
-								onButtonClicked={() => router.push('/fac')}
-								selected={router.asPath.includes('/fac')}
-							/>
-							<NaviButton
-								type="advice"
-								onButtonClicked={() => router.push('/advice')}
-								selected={router.asPath.includes('/advice')}
-							/>
-							<NaviButton
-								type="my"
-								onButtonClicked={() => router.push('/my')}
-								selected={router.asPath.includes('/my')}
-							/>
-						</div>
+		<>
+			<div className="w-full">
+				<div className="flex justify-center w-full">
+					<div className="relative flex flex-col w-full">
+						<div className="w-full max-w-[640px] mx-auto">{children}</div>
+						{!hideNavigation && (
+							<div className="fixed inset-x-0 bottom-0 w-full h-[70px] border-t border-gray-200 bg-white z-10">
+								<div className="grid w-full max-w-[640px] h-full grid-cols-4 mx-auto">
+									<NaviButton
+										type="home"
+										onButtonClicked={() => router.push('/')}
+										selected={router.asPath === '/'}
+									/>
+									<NaviButton
+										type="fac"
+										onButtonClicked={() => router.push('/fac')}
+										selected={router.asPath.includes('/fac')}
+									/>
+									<NaviButton
+										type="advice"
+										onButtonClicked={() => router.push('/advice')}
+										selected={router.asPath.includes('/advice')}
+									/>
+									<NaviButton
+										type="my"
+										onButtonClicked={() => router.push('/my')}
+										selected={router.asPath.includes('/my')}
+									/>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>
-		</div>
+			{toastState.isShown && (
+				<div className={cls('fixed inset-0', toastState?.providedContainerStyle)}>
+					<div className="flex items-center justify-center w-full h-full">
+						<Toast
+							title={toastState?.message}
+							isErrorStyle={toastState?.isErrorStyle}
+							providedStyle={toastState?.providedStyle ?? ''}
+						/>
+					</div>
+				</div>
+			)}
+		</>
 	);
 };
 
@@ -65,7 +114,7 @@ const NaviButton = ({ type, selected, onButtonClicked }: NaviButtonProps) => {
 			onClick={onButtonClicked}
 		>
 			{type === 'home' ? (
-				<HomeIcon className={cls('w-8 h-8', selected ? '' : '')} />
+				<HomeIcon className={cls('w-8 h-8')} />
 			) : type === 'fac' ? (
 				<DocumentMagnifyingGlassIcon className="w-8 h-8" />
 			) : type === 'advice' ? (
@@ -79,3 +128,20 @@ const NaviButton = ({ type, selected, onButtonClicked }: NaviButtonProps) => {
 		</button>
 	);
 };
+
+//TOAST
+export interface ToastStateProps {
+	isShown: boolean;
+	message: string;
+	isErrorStyle?: boolean;
+	providedContainerStyle?: string;
+	providedStyle?: string;
+	setTime?: number;
+}
+export const ToastState = atom({
+	key: `ToastStateKey`,
+	default: {
+		isShown: false,
+		message: ''
+	} as ToastStateProps
+});

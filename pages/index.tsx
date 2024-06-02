@@ -1,6 +1,5 @@
 import { faHospital } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { HomeModernIcon } from '@heroicons/react/24/solid';
 import React from 'react';
 
 // '/'

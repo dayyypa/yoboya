@@ -73,7 +73,27 @@ input::-webkit-input-placeholder {
 }
 
 input:focus {
-	border-color: #808080;
+	/* border-color: #808080;
 	outline: none;
-	caret-color: #242424;
+	caret-color: #242424; */
+}
+
+
+#toast {
+	/* position: fixed; */
+	/* left: 50%;
+	transform: translate(-50%, 10px); */
+	overflow: hidden;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.5s, visibility 0.5s, transform 0.5s;
+	background: rgba(0, 0, 0, 0.7);
+	color: #fff;
+	z-index: 10000 !important;
+}
+
+#toast.reveal {
+	opacity: 1;
+	visibility: visible;
+	/* transform: translate(-50%, 0); */
 }

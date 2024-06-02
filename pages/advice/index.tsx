@@ -1,13 +1,44 @@
 import { useRouter } from 'next/router';
 import { Line } from '..';
+import { BasicButton } from '../../components/basicButton';
+import { supabase } from '../../libs/supabaseClient';
+import { useEffect, useState } from 'react';
+import { Tables } from '../../database.types';
 
 const AdviceIndexPage = () => {
 	const router = useRouter();
+	const [list, setList] = useState<Tables<'advice'>[]>([]);
+
+	const getList = async () => {
+		const { data, error } = await supabase.from('advice').select('*');
+
+		if (error) {
+			console.log(error);
+			return;
+		}
+
+		if (data) {
+			setList(data);
+		}
+	};
+
+	useEffect(() => {
+		getList();
+	}, []);
 
 	return (
-		<div className="w-full flex flex-col mt-3">
+		<div className="flex flex-col w-full mt-3">
 			<div className="flex flex-col space-y-4">
-				<div className="text-[18px] font-bold">상담사레</div>
+				<div className="flex items-center justify-between">
+					<div className="text-[18px] font-bold">상담사레</div>
+					<BasicButton
+						name={'상담하기'}
+						providedStyle="bg-blue-700 text-white w-[80px] !h-[40px]"
+						onButtonClicked={() => {
+							router.push('/advice/form');
+						}}
+					/>
+				</div>
 				<div className="flex justify-between">
 					<div className="text-[12px]">
 						총, <span className="text-[#4298ef]">1023</span>개의 상담사레가 있어요
@@ -15,7 +46,18 @@ const AdviceIndexPage = () => {
 					<div className="text-[12px] cursor-pointer">최신답변순</div>
 				</div>
 			</div>
-			<div className="flex flex-col space-y-5 mt-8">
+			<div className="flex flex-col mt-8 space-y-5">
+				{list.map((item) => (
+					<AdviceItem
+						title={item.title}
+						content={item.content}
+						count={8}
+						replyAt={'2024년 5월 22일'}
+						onItemClicked={() => {
+							router.push(`/advice/${item.id}`);
+						}}
+					/>
+				))}
 				<AdviceItem
 					title={'치매 80대 여성'}
 					content={
@@ -90,7 +132,7 @@ interface AdviceItemProps {
 const AdviceItem = ({ title, content, count, replyAt, onItemClicked }: AdviceItemProps) => {
 	return (
 		<div>
-			<div className="flex flex-col cursor-pointer space-y-2" onClick={onItemClicked}>
+			<div className="flex flex-col space-y-2 cursor-pointer" onClick={onItemClicked}>
 				<div className="text-[20px] font-bold">{title}</div>
 				<div className="text-[14px] font-semibold">
 					<span className="text-[#386bec]">답변</span> 요보야 사회복지사

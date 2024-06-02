@@ -9,17 +9,17 @@ const AdviceDetailPage = () => {
 	return (
 		<div className="flex flex-col">
 			{/* 아이콘 영역 */}
-			<div className="flex mt-4 ml-2 justify-between">
+			<div className="flex justify-between mt-4 ml-2">
 				<FontAwesomeIcon
 					icon={faChevronLeft}
-					className="cursor-pointer w-5 h-5"
+					className="w-5 h-5 cursor-pointer"
 					onClick={() => {
 						router.push('/advice');
 					}}
 				/>
 				<FontAwesomeIcon
 					icon={faHouse}
-					className="cursor-pointer w-5 h-5"
+					className="w-5 h-5 cursor-pointer"
 					onClick={() => {
 						router.push('/');
 					}}
@@ -27,7 +27,7 @@ const AdviceDetailPage = () => {
 			</div>
 			{/*  해당아이디 */}
 			<div>
-				<div className="flex mt-8 space-x-2 items-center">
+				<div className="flex items-center mt-8 space-x-2">
 					<FontAwesomeIcon icon={faQ} className="w-5 h-5" />
 					<div className="text-[18px] font-bold">클릭된아이디</div>
 				</div>
@@ -36,7 +36,7 @@ const AdviceDetailPage = () => {
 					정신과약 복용 중. 등급 신청 전. 콧줄, 기저귀, 혼잣말이 아주 많음.
 				</div>
 				{/* 아이디 상세정보 */}
-				<div className="flex flex-col mt-10 space-y-2 rounded-lg border-[2px] border-zinc-150">
+				<div className="flex flex-col mt-10 space-y-2 rounded-12 border-[2px] border-zinc-150">
 					<div className="text-[13px] font-semibold text-gray-700 mx-2 mt-2">상세정보</div>
 					<div className="grid grid-cols-2">
 						<InfoItem title={'관심시설'} content={'요양원, 요양병원'} />
@@ -54,7 +54,7 @@ const AdviceDetailPage = () => {
 						<InfoItem title={'거주지역'} content={'경기도 고양시 덕양구 행신동'} />
 					</div>
 				</div>
-				<div className="flex space-x-3 mt-4">
+				<div className="flex mt-4 space-x-3">
 					<div className="flex space-x-1 text-[13px] text-gray-600">
 						<div>조회수</div>
 						<div>7</div>
@@ -73,7 +73,7 @@ const AdviceDetailPage = () => {
 				</div>
 			</div>
 			{/* 문의 답변 */}
-			<div className="flex flex-col space-y-12 px-4 py-8">
+			<div className="flex flex-col px-4 py-8 space-y-12">
 				<div className="flex flex-col space-y-3">
 					<div className="text-[19px]">
 						<span className="font-semibold">요보야 사회복지사</span>의 답변입니다
@@ -105,7 +105,7 @@ interface InfoItemProps {
 
 const InfoItem = ({ title, content }: InfoItemProps) => {
 	return (
-		<div className="flex flex-col mx-2 space-y-1 border-b-2 border-zinc-100 pb-3">
+		<div className="flex flex-col pb-3 mx-2 space-y-1 border-b-2 border-zinc-100">
 			<div className="text-[12px] text-gray-500 font-medium">{title}</div>
 			<div className="text-[14px] font-semibold">{content}</div>
 		</div>
