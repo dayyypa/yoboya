@@ -17,6 +17,7 @@ export type Database = {
           id: number
           title: string
           user_id: string | null
+          views: number | null
         }
         Insert: {
           content: string
@@ -25,6 +26,7 @@ export type Database = {
           id?: number
           title: string
           user_id?: string | null
+          views?: number | null
         }
         Update: {
           content?: string
@@ -33,15 +35,50 @@ export type Database = {
           id?: number
           title?: string
           user_id?: string | null
+          views?: number | null
         }
         Relationships: []
+      }
+      advice_comment: {
+        Row: {
+          advice_id: number
+          content: string | null
+          created_at: string
+          id: number
+        }
+        Insert: {
+          advice_id?: number
+          content?: string | null
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          advice_id?: number
+          content?: string | null
+          created_at?: string
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advice_comment_advice_id_fkey"
+            columns: ["advice_id"]
+            isOneToOne: false
+            referencedRelation: "advice"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_views: {
+        Args: {
+          detail_id: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

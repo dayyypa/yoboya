@@ -56,3 +56,32 @@ export const LineBreaker = (text?: string, keyword?: string) => {
 			</span>
 		));
 };
+
+export const formatRelativeTime = (dateString: string): string => {
+	if (dateString === '') {
+		return '';
+	}
+
+	const date = new Date(dateString);
+	const now = new Date();
+	const diff = now.getTime() - date.getTime();
+
+	const seconds = Math.floor(diff / 1000);
+	const minutes = Math.floor(diff / (1000 * 60));
+	const hours = Math.floor(diff / (1000 * 60 * 60));
+	const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+	const months = Math.floor(days / 30);
+
+	if (seconds < 60) return `${seconds}초 전`;
+	if (minutes < 60) return `${minutes}분 전`;
+	if (hours < 24) return `${hours}시간 전`;
+	if (days < 2) return `어제`;
+	if (days < 3) return `엊그제`;
+	if (days < 30) return `${days}일 전`;
+	if (months < 12) return `${months}달 전`;
+
+	// 원하는 포맷에 맞게 날짜를 반환
+	return `${date.getFullYear() % 100}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(
+		date.getDate()
+	).padStart(2, '0')}`;
+};

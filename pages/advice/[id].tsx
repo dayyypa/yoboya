@@ -2,9 +2,76 @@ import { faChevronLeft, faHouse, faQ } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRouter } from 'next/router';
 import { Line } from '..';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../libs/supabaseClient';
+import { Tables } from '../../database.types';
+import { cls, formatRelativeTime } from '../../libs/utility';
+import { useInput } from '../../libs/hooks/useInput';
+import { loginUserState } from '../../libs/store';
+import { useRecoilState } from 'recoil';
 
 const AdviceDetailPage = () => {
 	const router = useRouter();
+	const [loginUser] = useRecoilState(loginUserState);
+	const commentInput = useInput({ defaultValue: '' });
+	const detailId = Number(router.query.id);
+	const [detail, setDetail] = useState<Tables<'advice'> | null>(null);
+
+	const [comments, setComments] = useState<Tables<'advice_comment'>[]>([]);
+
+	const getDetail = async () => {
+		const { data, error } = await supabase.from('advice').select('*').eq('id', detailId).limit(1).single();
+
+		if (error) {
+			console.log(error);
+			return;
+		}
+
+		if (data) {
+			await increasePostViews(detailId);
+			setDetail(data);
+		}
+	};
+
+	const getComments = async () => {
+		const { data, error } = await supabase
+			.from('advice_comment')
+			.select('*')
+			.eq('advice_id', detailId)
+			.order('created_at', { ascending: false });
+
+		if (error) {
+			console.log(error);
+			return;
+		}
+
+		setComments(data || []);
+	};
+
+	const handleCommentSubmit = async () => {
+		if (!commentInput.value.trim()) return;
+
+		if (!loginUser) {
+			alert('로그인 후 이용해주세요.');
+			return;
+		}
+
+		const { error } = await supabase
+			.from('advice_comment')
+			.insert([{ advice_id: detailId, content: commentInput.value }]);
+
+		if (error) {
+			console.log(error);
+			return;
+		}
+
+		commentInput.setValue('');
+		getComments();
+	};
+
+	useEffect(() => {
+		getDetail();
+	}, [detailId]);
 
 	return (
 		<div className="flex flex-col">
@@ -29,39 +96,29 @@ const AdviceDetailPage = () => {
 			<div>
 				<div className="flex items-center mt-8 space-x-2">
 					<FontAwesomeIcon icon={faQ} className="w-5 h-5" />
-					<div className="text-[18px] font-bold">클릭된아이디</div>
+					<div className="text-[18px] font-bold">{detail ? detail.title : ''}</div>
 				</div>
-				<div className="text-[14px] text-gray-700 mt-7">
-					간농양으로 한달 ICU, 항생제 치료로 한달 치료. 현재 일반병원에서 보존적 치료 중. 치매+섬망으로
-					정신과약 복용 중. 등급 신청 전. 콧줄, 기저귀, 혼잣말이 아주 많음.
-				</div>
+				<div className="text-[14px] text-gray-700 mt-7">{detail ? detail.title : '로딩중입니다...'}</div>
 				{/* 아이디 상세정보 */}
-				<div className="flex flex-col mt-10 space-y-2 rounded-12 border-[2px] border-zinc-150">
+				<div className="flex flex-col mt-10 space-y-2 p-4 rounded-12 border-[2px] border-zinc-150">
 					<div className="text-[13px] font-semibold text-gray-700 mx-2 mt-2">상세정보</div>
 					<div className="grid grid-cols-2">
-						<InfoItem title={'관심시설'} content={'요양원, 요양병원'} />
-
-						<InfoItem title={'장기요양등급'} content={'등급없음 & 등급신청 도움 필요'} />
-
-						<InfoItem title={'기초생활수급자 / 감경 대상 여부'} content={'아니오'} />
-
-						<InfoItem title={'질병명'} content={'치매'} />
-
-						<InfoItem title={'성별'} content={'남성'} />
-
-						<InfoItem title={'출생연도'} content={'1949년 (만75세)'} />
-
-						<InfoItem title={'거주지역'} content={'경기도 고양시 덕양구 행신동'} />
+						<InfoItem id={0} title={'관심시설'} content={'요양원, 요양병원'} />
+						<InfoItem id={1} title={'장기요양등급'} content={'등급없음 & 등급신청 도움 필요'} />
+						<InfoItem id={2} title={'기초생활수급자 / 감경 대상 여부'} content={'아니오'} />
+						<InfoItem id={3} title={'질병명'} content={'치매'} />
+						<InfoItem id={4} title={'성별'} content={'남성'} />
+						<InfoItem id={5} title={'출생연도'} content={'1949년 (만75세)'} />
+						<InfoItem id={6} title={'거주지역'} content={'경기도 고양시 덕양구 행신동'} />
 					</div>
 				</div>
 				<div className="flex mt-4 space-x-3">
 					<div className="flex space-x-1 text-[13px] text-gray-600">
 						<div>조회수</div>
-						<div>7</div>
+						<div>{(detail?.views ?? 0) + 1}</div>
 					</div>
 					<div className="flex space-x-1 text-[13px] text-gray-600">
-						<div>8</div>
-						<div>시간 전</div>
+						{formatRelativeTime(detail?.created_at ?? '')}
 					</div>
 				</div>
 				<Line />
@@ -72,7 +129,22 @@ const AdviceDetailPage = () => {
 					<div className="w-full h-[2px] bg-zinc-100"></div>
 				</div>
 			</div>
+			{/* 댓글 달기 */}
+			<div className="flex flex-col mt-4">
+				<textarea
+					{...commentInput.props}
+					className="w-full p-2 border rounded-md resize-none"
+					placeholder="댓글을 작성하세요."
+				/>
+				<button
+					onClick={handleCommentSubmit}
+					className="self-end px-4 py-2 mt-2 text-white bg-blue-500 rounded-md"
+				>
+					댓글 작성
+				</button>
+			</div>
 			{/* 문의 답변 */}
+			<div className="flex"></div>
 			<div className="flex flex-col px-4 py-8 space-y-12">
 				<div className="flex flex-col space-y-3">
 					<div className="text-[19px]">
@@ -99,19 +171,31 @@ const AdviceDetailPage = () => {
 export default AdviceDetailPage;
 
 interface InfoItemProps {
+	id: number;
 	title: string;
 	content: string;
 }
 
-const InfoItem = ({ title, content }: InfoItemProps) => {
+const InfoItem = ({ id, title, content }: InfoItemProps) => {
 	return (
-		<div className="flex flex-col pb-3 mx-2 space-y-1 border-b-2 border-zinc-100">
+		<div className={cls('flex flex-col px-2 py-3 mx-2 space-y-1', id === 6 ? '' : 'border-b border-zinc-100')}>
 			<div className="text-[12px] text-gray-500 font-medium">{title}</div>
 			<div className="text-[14px] font-semibold">{content}</div>
 		</div>
 	);
 };
 
-// const IdInfo = () => {
-// 	return <div></div>;
-// };
+const increasePostViews = async (detailId: number): Promise<void> => {
+	try {
+		const { error } = await supabase.rpc('increment_views', { detail_id: detailId });
+
+		if (error) {
+			throw error;
+		}
+	} catch (error: any) {
+		console.error('Error updating views:', error.message);
+	}
+};
+
+
+
