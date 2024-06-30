@@ -42,18 +42,21 @@ export type Database = {
       advice_comment: {
         Row: {
           advice_id: number
+          author_id: string | null
           content: string | null
           created_at: string
           id: number
         }
         Insert: {
           advice_id?: number
+          author_id?: string | null
           content?: string | null
           created_at?: string
           id?: number
         }
         Update: {
           advice_id?: number
+          author_id?: string | null
           content?: string | null
           created_at?: string
           id?: number
@@ -66,7 +69,35 @@ export type Database = {
             referencedRelation: "advice"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "advice_comment_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      profile: {
+        Row: {
+          created_at: string
+          id: number
+          nickname: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          nickname?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          nickname?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

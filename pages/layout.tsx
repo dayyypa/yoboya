@@ -19,7 +19,7 @@ interface LayoutProps extends PropsWithChildren {
 
 export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 	const router = useRouter();
-	const [, setLoginUser] = useRecoilState(loginUserState);
+	const [loginUser, setLoginUser] = useRecoilState(loginUserState);
 	const [toastState, setToastState] = useRecoilState(ToastState);
 
 	//토스트
@@ -36,9 +36,29 @@ export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 	}, [toastState, setToastState]);
 
 	useEffect(() => {
+		if (loginUser) {
+			return;
+		}
+
+		const checkUserProfile = async (user: any) => {
+			const { data, error } = await supabase.from('profile').select('nickname').eq('user_id', user.id).single();
+			console.log('checkUserProfile', data, error);
+			if (error || !data.nickname) {
+				router.push('/set-profile'); // 닉네임 설정 페이지로 리다이렉트
+			} else {
+				setLoginUser({
+					...user,
+					nickname: data.nickname
+				});
+				// router.push('/'); // 메인 페이지로 리다이렉트
+			}
+		};
+
 		const { data } = supabase.auth.onAuthStateChange((event, session) => {
+			console.log('dddd', session?.user);
 			if (session?.user) {
 				setLoginUser(session.user);
+				checkUserProfile(session.user);
 			} else {
 				setLoginUser(null);
 			}
@@ -47,14 +67,14 @@ export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 		return () => {
 			data.subscription.unsubscribe();
 		};
-	}, []);
+	}, [loginUser]);
 
 	return (
 		<>
 			<div className="w-full">
 				<div className="flex justify-center w-full">
 					<div className="relative flex flex-col w-full">
-						<div className="w-full max-w-[640px] mx-auto">{children}</div>
+						<div className="w-full laptop:marker:max-w-[640px] mx-auto">{children}</div>
 						{!hideNavigation && (
 							<div className="fixed inset-x-0 bottom-0 w-full h-[70px] border-t border-gray-200 bg-white z-10">
 								<div className="grid w-full max-w-[640px] h-full grid-cols-4 mx-auto">

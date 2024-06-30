@@ -20,9 +20,9 @@ const MyIndexPage = () => {
 
 	return (
 		<div className="flex flex-col pt-3">
-			<div className="text-[20px] font-semibold">YoBoYa</div>
-			<div className="flex flex-col space-y-5 mt-[45px]">
-				{!loginUser && (
+			<div className="text-[20px] font-semibold sm:px-4">YoBoYa</div>
+			<div className="flex flex-col mt-2">
+				{!loginUser ? (
 					<>
 						<div className="flex flex-col items-center">
 							<div className="font-semibold">
@@ -39,21 +39,31 @@ const MyIndexPage = () => {
 							로그인/회원가입
 						</button>
 					</>
+				) : (
+					<>
+						<div className="flex flex-col sm:px-4">
+							<div className="text-13 text-zinc-600">
+								😇{' '}
+								<span className="text-orange-400 text-15 font-weight-600">{loginUser?.nickname}</span>
+								님, 반갑습니다!
+							</div>
+						</div>
+					</>
 				)}
-				<div className="flex font-semibold ">
-					<div className="flex flex-col items-center justify-center w-1/4 p-4 space-y-3 rounded-12 cursor-pointer hover:bg-gray-100">
+				<div className="flex mt-5 font-semibold">
+					<div className="flex flex-col items-center justify-center w-1/4 p-4 space-y-3 cursor-pointer rounded-12 hover:bg-gray-100">
 						<FontAwesomeIcon icon={faHeart} className="w-9 h-9" />
 						<div>찜한 목록</div>
 					</div>
-					<div className="flex flex-col items-center justify-center w-1/4 p-4 space-y-3 rounded-12 cursor-pointer hover:bg-gray-100">
+					<div className="flex flex-col items-center justify-center w-1/4 p-4 space-y-3 cursor-pointer rounded-12 hover:bg-gray-100">
 						<FontAwesomeIcon icon={faBuilding} className="w-9 h-9" />
 						<div>최근 본 시설</div>
 					</div>
-					<div className="flex flex-col items-center justify-center w-1/4 p-4 space-y-3 rounded-12 cursor-pointer hover:bg-gray-100">
+					<div className="flex flex-col items-center justify-center w-1/4 p-4 space-y-3 cursor-pointer rounded-12 hover:bg-gray-100">
 						<FontAwesomeIcon icon={faMessage} className="w-9 h-9" />
 						<div>나의 상담</div>
 					</div>
-					<div className="flex flex-col items-center justify-center w-1/4 p-4 space-y-3 rounded-12 cursor-pointer hover:bg-gray-100">
+					<div className="flex flex-col items-center justify-center w-1/4 p-4 space-y-3 cursor-pointer rounded-12 hover:bg-gray-100">
 						<FontAwesomeIcon icon={faPenToSquare} className="w-9 h-9" />
 						<div>나의 후기</div>
 					</div>

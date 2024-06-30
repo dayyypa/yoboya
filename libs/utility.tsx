@@ -57,8 +57,8 @@ export const LineBreaker = (text?: string, keyword?: string) => {
 		));
 };
 
-export const formatRelativeTime = (dateString: string): string => {
-	if (dateString === '') {
+export const formatRelativeTime = (dateString?: string): string => {
+	if (!dateString) {
 		return '';
 	}
 
