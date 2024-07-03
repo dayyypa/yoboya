@@ -8,9 +8,10 @@ import { useRouter } from 'next/router';
 import { PropsWithChildren, useEffect } from 'react';
 import { cls } from '../libs/utility';
 import { atom, useRecoilState } from 'recoil';
-import { supabase } from '../libs/supabaseClient';
-import { loginUserState } from '../libs/store';
+import { signInWithGoogle, supabase } from '../libs/supabaseClient';
+import { loginUserState, needLoginState } from '../libs/store';
 import Toast from '../components/toast';
+import { BasicPopup } from '../components/basicPopup';
 
 interface LayoutProps extends PropsWithChildren {
 	//
@@ -20,6 +21,7 @@ interface LayoutProps extends PropsWithChildren {
 export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 	const router = useRouter();
 	const [loginUser, setLoginUser] = useRecoilState(loginUserState);
+	const [needLogin, setNeedLogin] = useRecoilState<boolean>(needLoginState);
 	const [toastState, setToastState] = useRecoilState(ToastState);
 
 	//토스트
@@ -35,24 +37,30 @@ export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 		}
 	}, [toastState, setToastState]);
 
+	const getLoginUserInfo = async (user: any) => {
+		const { data, error } = await supabase.from('profile').select('*').eq('user_id', user.id).single();
+		return { data, error };
+	};
+
+	const checkUserProfile = async (user: any) => {
+		const { data, error } = await getLoginUserInfo(user);
+		console.log('checkUserProfile', data, error);
+		if (error || !data?.nickname) {
+			router.push('/set-profile'); // 닉네임 설정 페이지로 리다이렉트
+		} else {
+			setLoginUser({
+				...user,
+				nickname: data.nickname,
+				likedFacs: data.liked_facs
+			});
+			// router.push('/'); // 메인 페이지로 리다이렉트
+		}
+	};
+
 	useEffect(() => {
 		if (loginUser) {
 			return;
 		}
-
-		const checkUserProfile = async (user: any) => {
-			const { data, error } = await supabase.from('profile').select('nickname').eq('user_id', user.id).single();
-			console.log('checkUserProfile', data, error);
-			if (error || !data.nickname) {
-				router.push('/set-profile'); // 닉네임 설정 페이지로 리다이렉트
-			} else {
-				setLoginUser({
-					...user,
-					nickname: data.nickname
-				});
-				// router.push('/'); // 메인 페이지로 리다이렉트
-			}
-		};
 
 		const { data } = supabase.auth.onAuthStateChange((event, session) => {
 			console.log('dddd', session?.user);
@@ -69,12 +77,18 @@ export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 		};
 	}, [loginUser]);
 
+	useEffect(() => {
+		if (loginUser?.nickname) {
+			checkUserProfile(loginUser);
+		}
+	}, [loginUser?.nickname, router.asPath]);
+
 	return (
 		<>
 			<div className="w-full">
 				<div className="flex justify-center w-full">
 					<div className="relative flex flex-col w-full">
-						<div className="w-full laptop:marker:max-w-[640px] mx-auto">{children}</div>
+						<div className="w-full max-w-[640px] mx-auto">{children}</div>
 						{!hideNavigation && (
 							<div className="fixed inset-x-0 bottom-0 w-full h-[70px] border-t border-gray-200 bg-white z-10">
 								<div className="grid w-full max-w-[640px] h-full grid-cols-4 mx-auto">
@@ -114,6 +128,15 @@ export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 						/>
 					</div>
 				</div>
+			)}
+			{needLogin && (
+				<BasicPopup
+					title="로그인이 필요한 서비스에요😄"
+					content="로그인하고 2,353명의 사회복지사와 함께 하세요!"
+					rightButtonTitle="로그인하러 가기"
+					onLeftButtonClicked={() => setNeedLogin(false)}
+					onRightButtonClicked={() => signInWithGoogle()}
+				/>
 			)}
 		</>
 	);

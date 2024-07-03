@@ -1,20 +1,48 @@
-import { faChevronDown, faLocationDot, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faHeart as faHeartFill } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from 'react-query';
 import ApiHelper from '../../libs/server/api.helper';
-import { Facility, MyKey } from '../../libs/store';
+import { Facility, loginUserState, MyKey, needLoginState, UserInfo } from '../../libs/store';
 import { cls } from '../../libs/utility';
 import MyMap from '../../components/Map';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BasicButton } from '../../components/basicButton';
+import { faHeart } from '@fortawesome/free-regular-svg-icons';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { supabase } from '../../libs/supabaseClient';
+import { useRouter } from 'next/router';
 
+const facCityList = [
+	{ value: '-1', name: '지역' },
+	{ value: '-1', name: '전체' },
+	{ value: '시흥시', name: '시흥시' },
+	{ value: '고양시', name: '고양시' },
+	{ value: '용인시', name: '용인시' },
+	{ value: '광주시', name: '광주시' },
+	{ value: '부천시', name: '부천시' },
+	{ value: '김포시', name: '김포시' },
+	{ value: '평택시', name: '평택시' },
+	{ value: '안산시', name: '안산시' },
+	{ value: '광명시', name: '광명시' },
+	{ value: '하남시', name: '하남시' }
+];
+
+export const thirdPartyAPIAddress = 'https://openapi.gg.go.kr/RecuperationHospital';
 const FacIndexPage = () => {
+	const router = useRouter();
+	const [loginUser] = useRecoilState(loginUserState);
+	const setNeedLogin = useSetRecoilState(needLoginState);
 	const [total, setTotal] = useState(0);
 	const [page, setPage] = useState(1);
 	const [list, setList] = useState<Facility[]>([]);
 	const [city, setCity] = useState<string>();
-	// data?.RecuperationHospital[1].row as Facility[
-	const { data, isLoading, refetch } = useQuery(
+	const [likedFacs, setLikedFacs] = useState<string[]>(loginUser?.likedFacs ? JSON.parse(loginUser?.likedFacs) : []);
+
+	useEffect(() => {
+		setLikedFacs(loginUser?.likedFacs ? JSON.parse(loginUser?.likedFacs) : []);
+	}, [loginUser]);
+
+	const { refetch } = useQuery(
 		['facilities'],
 		async () => {
 			try {
@@ -25,13 +53,12 @@ const FacIndexPage = () => {
 					pSize: 10,
 					SIGUN_NM: city
 				};
-				console.log('qqq', query);
+
 				const res = await ApiHelper.GetAsync({
-					path: 'https://openapi.gg.go.kr/RecuperationHospital',
+					path: thirdPartyAPIAddress,
 					query
 				});
 
-				console.log();
 				if (!res.body.RecuperationHospital) {
 					alert('데이터를 불러오는데 실패했습니다.');
 					return;
@@ -49,6 +76,15 @@ const FacIndexPage = () => {
 
 	const handleMore = () => {
 		setPage((prev) => prev + 1);
+	};
+
+	const handleCitySelect = (city: string) => {
+		if (city === '-1') {
+			setCity(undefined);
+			return;
+		}
+
+		setCity(city);
 	};
 
 	useEffect(() => {
@@ -71,50 +107,59 @@ const FacIndexPage = () => {
 				</div>
 				<div className="flex justify-between">
 					<div className="flex space-x-2">
-						<Dropdown
-							optionList={[
-								{ value: '-1', name: '지역' },
-								{ value: '-1', name: '전체' },
-								{ value: '시흥시', name: '시흥시' },
-								{ value: '고양시', name: '고양시' },
-								{ value: '용인시', name: '용인시' },
-								{ value: '광주시', name: '광주시' },
-								{ value: '부천시', name: '부천시' },
-								{ value: '김포시', name: '김포시' },
-								{ value: '평택시', name: '평택시' },
-								{ value: '안산시', name: '안산시' },
-								{ value: '광명시', name: '광명시' },
-								{ value: '하남시', name: '하남시' }
-							]}
-							onSelect={(city) => {
-								if (city === '-1') {
-									setCity(undefined);
-									return;
-								}
-
-								setCity(city);
-							}}
-						/>
+						<Dropdown optionList={facCityList} onSelect={handleCitySelect} />
 					</div>
 				</div>
-				<div className="flex justify-between">
+				<div className="flex flex-col">
 					<div>
 						총 <span className="text-orange-400">{total}</span>개의 시설이 있어요
+					</div>
+					<div className="flex mt-1">
+						<button
+							className="text-12 text-zinc-500 hover:underline underline-offset-4"
+							onClick={() => {
+								if (loginUser?.id) {
+									router.push('/fac/liked');
+								} else {
+									setNeedLogin(true);
+								}
+							}}
+						>
+							<FontAwesomeIcon icon={faHeart} className="w-3 h-3 text-zinc-500" />
+							<span className="ml-1">내가 찜한 시설 보러가기</span>
+						</button>
 					</div>
 				</div>
 			</div>
 			{/* 병원 컴포넌트 */}
 			<div className="flex flex-col divide-y divide-zinc-300 sm:px-4">
-				{list?.map((item) => {
-					return <HospitalInfo item={item} />;
+				{list?.map((item, index) => {
+					return (
+						<HospitalInfo
+							key={index}
+							item={item}
+							isLiked={item.BIZPLC_NM ? likedFacs.includes(item.BIZPLC_NM) : false}
+							onLikeClick={(name) => {
+								let newArr: string[];
+								if (likedFacs.includes(name)) {
+									newArr = likedFacs.filter((item) => item !== name);
+								} else {
+									newArr = [...likedFacs, name];
+								}
+
+								updateLikedFacs(newArr, loginUser);
+								setLikedFacs(newArr);
+							}}
+						/>
+					);
 				})}
-			</div>
-			<div className="flex justify-center py-5">
-				<BasicButton
-					name={'더보기'}
-					providedStyle="!bg-orange-400 !text-white !rounded-8 !w-[300px] !h-[50px] !text-16 !font-bold"
-					onButtonClicked={handleMore}
-				/>
+				<div className="flex justify-center py-5">
+					<BasicButton
+						name={'더보기'}
+						providedStyle="!bg-orange-400 !text-white !rounded-8 !w-[300px] !h-[50px] !text-16 !font-bold"
+						onButtonClicked={handleMore}
+					/>
+				</div>
 			</div>
 		</div>
 	);
@@ -122,20 +167,71 @@ const FacIndexPage = () => {
 
 export default FacIndexPage;
 
+export const updateLikedFacs = async (likedFacs: string[], loginUser?: UserInfo | null) => {
+	try {
+		if (!loginUser?.id) {
+			alert('로그인이 필요합니다.');
+		}
+
+		const { data, error } = await supabase
+			.from('profile')
+			.update({ liked_facs: JSON.stringify(likedFacs) })
+			.eq('user_id', loginUser?.id!)
+			.select()
+			.single();
+
+		if (error) {
+			console.log(error);
+			return;
+		}
+
+		if (data) {
+			console.log('data liked!!!!', data);
+		}
+	} catch (error) {
+		console.error('Error updating detail:', error);
+	}
+};
 interface HospitalInfoProps {
+	isLiked?: boolean;
 	item?: Facility;
+	onLikeClick: (name: string) => void;
 }
 
-const HospitalInfo = ({ item }: HospitalInfoProps) => {
+export const HospitalInfo = ({ isLiked = true, item, onLikeClick }: HospitalInfoProps) => {
+	const loginUser = useRecoilValue(loginUserState);
+	const setNeedLogin = useSetRecoilState(needLoginState);
+	const [liked, setLiked] = useState(isLiked);
+
+	useEffect(() => {
+		setLiked(isLiked);
+	}, [isLiked]);
+
 	return (
-		<div className="p-2">
-			<div className="flex items-center justify-between space-x-2">
-				<div className="flex flex-col space-y-2">
-					<div className="text-[24px] font-bold">{item?.BIZPLC_NM}</div>
+		<div className="w-full p-2 select-none">
+			<div className="flex items-center w-full">
+				<div className="flex flex-col w-full space-y-2">
+					<div className="flex items-center justify-between w-full">
+						<div className="text-[24px] font-bold">{item?.BIZPLC_NM}</div>
+						<FontAwesomeIcon
+							icon={liked ? faHeartFill : faHeart}
+							className={cls('text-[24px] cursor-pointer', liked ? 'text-orange-400' : 'text-zinc-300')}
+							onClick={() => {
+								if (loginUser?.id) {
+									setLiked((prev) => !prev);
+									onLikeClick(item?.BIZPLC_NM ?? '');
+								} else {
+									setNeedLogin(true);
+								}
+							}}
+						/>
+					</div>
 					<div className="text-[16px] text-gray-500">{item?.REFINE_LOTNO_ADDR}</div>
 					<div className="text-12 text-zinc-400">{item?.TREAT_SBJECT_CONT}</div>
-					<div className="flex space-x-1">
-						<div className="text-[11px] px-2 py-1 bg-orange-200 text-orange-500 rounded-4">온라인상담</div>
+					<div className="space-x-1">
+						<span className="text-[11px] px-2 py-1 bg-orange-200 text-orange-500 rounded-4">
+							온라인상담
+						</span>
 						<Tag
 							text={`${(item?.MEDSTAF_CNT ?? 0) >= 12 ? 1 : 2}등급`}
 							providedStyle={(item?.MEDSTAF_CNT ?? 0) >= 12 ? '!bg-orange-400 !text-white' : ''}
@@ -145,12 +241,12 @@ const HospitalInfo = ({ item }: HospitalInfoProps) => {
 						<Tag text={`의료인 ${item?.MEDSTAF_CNT}명`} />
 					</div>
 				</div>
-				<div className="-z-10">
+				{/* <div className="-z-10">
 					<MyMap
 						latitude={item?.REFINE_WGS84_LAT ? parseFloat(item?.REFINE_WGS84_LAT) : undefined}
 						longitude={item?.REFINE_WGS84_LOGT ? parseFloat(item?.REFINE_WGS84_LOGT) : undefined}
 					/>
-				</div>
+				</div> */}
 				{/* <div className="w-[130px] h-[130px] rounded-lg bg-zinc-100 shrink-0 rounded-8"></div> */}
 			</div>
 		</div>
@@ -158,7 +254,7 @@ const HospitalInfo = ({ item }: HospitalInfoProps) => {
 };
 
 const Tag = ({ text, providedStyle }: { text: string; providedStyle?: string }) => {
-	return <div className={cls('text-[11px] px-2 py-1 bg-zinc-200 rounded-4', providedStyle)}>{text}</div>;
+	return <span className={cls('text-[11px] px-2 py-1 bg-zinc-200 rounded-4 shrink-0', providedStyle)}>{text}</span>;
 };
 
 function calculateYearsSince(dateString?: string): number {

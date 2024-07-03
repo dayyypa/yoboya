@@ -1,4 +1,4 @@
-import { faChevronLeft, faHouse, faQ } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faHouse, faQ, faShareNodes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRouter } from 'next/router';
 import { Line } from '..';
@@ -7,14 +7,16 @@ import { supabase } from '../../libs/supabaseClient';
 import { Tables } from '../../database.types';
 import { cls, formatRelativeTime, LineBreaker } from '../../libs/utility';
 import { useInput } from '../../libs/hooks/useInput';
-import { AdviceComment, AdviceDetail, loginUserState } from '../../libs/store';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { AdviceComment, AdviceDetail, loginUserState, needLoginState } from '../../libs/store';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { BasicPopup } from '../../components/basicPopup';
 import { faFaceFrownOpen } from '@fortawesome/free-regular-svg-icons';
+import { useQuery } from 'react-query';
 
 const AdviceDetailPage = () => {
 	const router = useRouter();
 	const [loginUser] = useRecoilState(loginUserState);
+	const needLogin = useSetRecoilState(needLoginState);
 	const commentInput = useInput({ defaultValue: '' });
 	const detailId = Number(router.query.id);
 	const [detail, setDetail] = useState<AdviceDetail>();
@@ -54,7 +56,6 @@ const AdviceDetailPage = () => {
 
 	const getDetail = async () => {
 		try {
-			// 1. `advice` 테이블에서 데이터를 가져옵니다.
 			const { data: advice, error: adviceError } = await supabase
 				.from('advice')
 				.select('*')
@@ -65,7 +66,6 @@ const AdviceDetailPage = () => {
 			if (adviceError) throw adviceError;
 
 			if (advice) {
-				// 2. `user_id`를 사용하여 `profile` 테이블에서 `nickname`을 가져옵니다.
 				const { data: profile, error: profileError } = await supabase
 					.from('profile')
 					.select('nickname')
@@ -74,13 +74,11 @@ const AdviceDetailPage = () => {
 
 				if (profileError) throw profileError;
 
-				// 3. `nickname`을 `advice` 데이터에 병합합니다.
 				const detailWithNickname: AdviceDetail = {
 					...advice,
 					nickname: profile.nickname
 				};
 
-				// 4. 조회수를 증가시키고, `detail` 상태를 업데이트합니다.
 				await increasePostViews(detailId);
 				setDetail(detailWithNickname);
 			}
@@ -88,6 +86,8 @@ const AdviceDetailPage = () => {
 			console.log(error);
 		}
 	};
+
+	const { isLoading } = useQuery(['advice', detailId], getDetail);
 
 	const updateDetail = async (id, newTitle, newContent) => {
 		try {
@@ -111,7 +111,7 @@ const AdviceDetailPage = () => {
 		}
 	};
 
-	const deleteDetail = async (id) => {
+	const deleteDetail = async (id: number) => {
 		try {
 			const { data, error } = await supabase.from('advice').delete().eq('id', id).select().single();
 
@@ -178,7 +178,7 @@ const AdviceDetailPage = () => {
 		getComments();
 	};
 
-	const editComment = async (commentId, newComment) => {
+	const editComment = async (commentId: number, newComment: string) => {
 		try {
 			const { error } = await supabase.from('advice_comment').update({ content: newComment }).eq('id', commentId);
 
@@ -197,12 +197,12 @@ const AdviceDetailPage = () => {
 	};
 
 	const handleCommentSubmit = async () => {
-		if (!commentInput.value.trim()) return;
-
 		if (!loginUser) {
-			alert('로그인 후 이용해주세요.');
+			needLogin(true);
 			return;
 		}
+
+		if (!commentInput.value.trim()) return;
 
 		const { error } = await supabase
 			.from('advice_comment')
@@ -224,6 +224,15 @@ const AdviceDetailPage = () => {
 	const handleDeleteComment = (id: number) => {
 		setShowDeletePopup(true);
 		setSelectedCommentId(id);
+	};
+
+	const handleShare = async (): Promise<void> => {
+		try {
+			await navigator.clipboard.writeText(window.location.href);
+			alert('주소가 복사되었습니다.');
+		} catch (err) {
+			console.error('Failed to copy text: ', err);
+		}
 	};
 
 	useEffect(() => {
@@ -251,75 +260,83 @@ const AdviceDetailPage = () => {
 				/>
 			</div>
 			{/*  해당아이디 */}
-			<div className="sm:px-4">
-				<div className="flex items-start mt-8 space-x-2">
-					<FontAwesomeIcon icon={faQ} className="w-5 h-5 text-orange-400" />
+			{isLoading ? (
+				<div className="py-10 text-center text-12">상담사례를 불러오고 있어요!🥰</div>
+			) : (
+				<div className="sm:px-4">
+					<div className="flex items-start mt-8 space-x-2">
+						<FontAwesomeIcon icon={faQ} className="w-5 h-5 text-orange-400" />
+						{editDetail ? (
+							<input
+								value={newTitle}
+								onChange={handleTitleChange}
+								className="text-[16px] font-bold flex-grow border rounded-4 px-2"
+							/>
+						) : (
+							<div className="text-[16px] font-bold">{detail?.title}</div>
+						)}
+					</div>
+					<div className="flex space-x-2 text-11 text-zinc-400">
+						<span>{detail?.nickname}</span>
+						<span>|</span>
+						<span>{formatRelativeTime(detail?.created_at)}</span>
+					</div>
 					{editDetail ? (
-						<input
-							value={newTitle}
-							onChange={handleTitleChange}
-							className="text-[16px] font-bold flex-grow border rounded-4 px-2"
+						<textarea
+							value={newContent}
+							onChange={handleContentChange}
+							className="text-[13px] text-zinc-500 mt-4 min-h-[80px] w-full border p-2 rounded-4 resize-none"
 						/>
 					) : (
-						<div className="text-[16px] font-bold">{detail?.title}</div>
+						<div className="text-[13px] text-zinc-500 mt-4 min-h-[80px]">
+							{detail ? LineBreaker(detail.content) : '로딩중입니다...'}
+						</div>
 					)}
-				</div>
-				<div className="flex space-x-2 text-11 text-zinc-400">
-					<span>{detail?.nickname}</span>
-					<span>{formatRelativeTime(detail?.created_at)}</span>
-				</div>
-				{editDetail ? (
-					<textarea
-						value={newContent}
-						onChange={handleContentChange}
-						className="text-[13px] text-zinc-500 mt-4 min-h-[80px] w-full border p-2 rounded-4 resize-none"
-					/>
-				) : (
-					<div className="text-[13px] text-zinc-500 mt-4 min-h-[80px]">
-						{detail ? LineBreaker(detail.content) : '로딩중입니다...'}
-					</div>
-				)}
-				<div className="flex"></div>
-				{loginUser?.id === detail?.user_id && (
-					<>
-						{editDetail ? (
-							<div className="flex mt-1 space-x-2">
-								<button className="text-zinc-400 text-10" onClick={handleEditSubmit}>
-									완료
-								</button>
-								<button className="text-zinc-400 text-10" onClick={handleEditToggle}>
-									취소
-								</button>
-							</div>
-						) : (
-							<>
-								<button
-									className="mt-2 text-white px-2 py-0.5 rounded-4 text-10 bg-zinc-300"
-									onClick={handleEditToggle}
-								>
-									수정
-								</button>
-								<button
-									className="ml-1 mt-2 text-white px-2 py-0.5 rounded-4 text-10 bg-red-300"
-									onClick={handleDeleteToggle}
-								>
-									삭제
-								</button>
-							</>
-						)}
-					</>
-				)}
-				<div className="flex mt-5 space-x-3">
-					<div className="flex space-x-1 text-[11px] text-zinc-400">
-						<span>조회수</span>
-						<span>{(detail?.views ?? 0) + 1}</span>
-					</div>
-					<div className="text-11 text-zinc-400">|</div>
-					<div className="flex space-x-1 text-[11px] text-zinc-400">
-						{formatRelativeTime(detail?.created_at ?? '')}
+					<div className="flex"></div>
+					{loginUser?.id === detail?.user_id && (
+						<>
+							{editDetail ? (
+								<div className="flex mt-1 space-x-2">
+									<button className="text-zinc-400 text-10" onClick={handleEditSubmit}>
+										완료
+									</button>
+									<button className="text-zinc-400 text-10" onClick={handleEditToggle}>
+										취소
+									</button>
+								</div>
+							) : (
+								<>
+									<button
+										className="mt-2 text-white px-2 py-0.5 rounded-4 text-10 bg-zinc-300"
+										onClick={handleEditToggle}
+									>
+										수정
+									</button>
+									<button
+										className="ml-1 mt-2 text-white px-2 py-0.5 rounded-4 text-10 bg-red-300"
+										onClick={handleDeleteToggle}
+									>
+										삭제
+									</button>
+								</>
+							)}
+						</>
+					)}
+					<div className="flex justify-between mt-5 space-x-3">
+						<div className="flex space-x-1 text-[11px] text-zinc-400">
+							<span>조회수</span>
+							<span>{(detail?.views ?? 0) + 1}</span>
+						</div>
+						<div
+							className="flex items-center space-x-1 text-[11px] text-zinc-400 cursor-pointer"
+							onClick={handleShare}
+						>
+							<FontAwesomeIcon icon={faShareNodes} className="text-zinc-400" />
+							<span>공유하기</span>
+						</div>
 					</div>
 				</div>
-			</div>
+			)}
 			<div className="w-full h-0.5 mt-1 bg-zinc-100 mb-4"></div>
 			{/* 댓글 달기 */}
 			<div className="flex flex-col mt-4 sm:px-4">
@@ -354,6 +371,7 @@ const AdviceDetailPage = () => {
 					{comments.map((comment) => (
 						<CommentItem
 							key={comment.id}
+							isAuthor={detail?.user_id === comment.author_id}
 							comment={comment}
 							onEdit={handleEditComment}
 							onDelete={handleDeleteComment}
@@ -394,21 +412,6 @@ const AdviceDetailPage = () => {
 
 export default AdviceDetailPage;
 
-interface InfoItemProps {
-	id: number;
-	title: string;
-	content: string;
-}
-
-const InfoItem = ({ id, title, content }: InfoItemProps) => {
-	return (
-		<div className={cls('flex flex-col px-2 py-3 mx-2 space-y-1', id === 6 ? '' : 'border-b border-zinc-100')}>
-			<div className="text-[12px] text-gray-500 font-medium">{title}</div>
-			<div className="text-[14px] font-semibold">{content}</div>
-		</div>
-	);
-};
-
 const increasePostViews = async (detailId: number): Promise<void> => {
 	try {
 		const { error } = await supabase.rpc('increment_views', { detail_id: detailId });
@@ -422,11 +425,12 @@ const increasePostViews = async (detailId: number): Promise<void> => {
 };
 
 interface CommentItemProps {
+	isAuthor?: boolean;
 	comment: AdviceComment;
 	onEdit: (id: number, newComment: string) => void;
 	onDelete: (id: number) => void;
 }
-const CommentItem = ({ comment, onEdit, onDelete }: CommentItemProps) => {
+const CommentItem = ({ isAuthor, comment, onEdit, onDelete }: CommentItemProps) => {
 	const loginUser = useRecoilValue(loginUserState);
 	const [edit, setEdit] = useState(false);
 	const [newContent, setNewContent] = useState(comment.content ?? '');
@@ -453,8 +457,14 @@ const CommentItem = ({ comment, onEdit, onDelete }: CommentItemProps) => {
 
 	return (
 		<div className="flex flex-col w-full p-4 space-y-2 border-b border-zinc-100">
-			<div className="flex items-center space-x-2">
-				<div className="text-[12px] text-zinc-500 font-weight-500">{comment.nickname}</div>
+			<div className="flex items-center space-x-1">
+				<div className="text-[11px] text-zinc-900 font-weight-700">{comment.nickname}</div>
+				{isAuthor && (
+					<div className="text-[8px] text-orange-400 px-1 py-0.25 border border-orange-400 rounded-4">
+						작성자
+					</div>
+				)}
+				<div className="text-[9px] text-zinc-400">|</div>
 				<div className="text-[10px] text-zinc-400">{formatRelativeTime(comment.created_at)}</div>
 			</div>
 			{edit ? (
@@ -472,7 +482,7 @@ const CommentItem = ({ comment, onEdit, onDelete }: CommentItemProps) => {
 					</button>
 				</div>
 			) : (
-				<div className="text-[13px]">{comment.content}</div>
+				<div className="text-[12px] text-zinc-600">{LineBreaker(comment.content ?? '')}</div>
 			)}
 			{loginUser?.id === comment.author_id && (
 				<div className="flex space-x-2">

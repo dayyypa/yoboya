@@ -4,83 +4,47 @@ import React, { useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { loginUserState } from '../libs/store';
 import { faSeedling } from '@fortawesome/free-solid-svg-icons';
-import { LineBreaker } from '../libs/utility';
+import { cls, LineBreaker } from '../libs/utility';
 import Slider from '../components/Slider';
+import { useRouter } from 'next/router';
 
 // '/'
 const MainPage = () => {
 	const loginUser = useRecoilValue(loginUserState);
+	const router = useRouter();
 
 	return (
 		<div className="flex flex-col w-full pb-[90px]">
 			{/* 상단 검색바 */}
-			<div className="sticky top-0 z-10 flex items-center pt-4 pb-2 space-x-2 bg-white sm:px-4">
+			<div className="sticky top-0 z-10 flex items-center pt-4 pb-4 space-x-2 bg-white sm:px-4">
 				<FontAwesomeIcon icon={faSeedling} className="text-orange-400 text-[24px]" />
-				<div className="grow h-[40px] border border-zinc-400 rounded-[20px] flex items-center px-4">
-					<input className="w-2/3" placeholder="요보야에서 검색해 보세요!" />
-				</div>
+				<span className="text-orange-400 text-24 font-weight-700">요보야</span>
 			</div>
 			{/* 움직이는 배너 */}
 			<Slider />
-			<Line />
+			<Line providedStyle="!mt-0" />
 			{/* 시설찾기 필터 */}
 			<div className="grid w-full grid-cols-4 gap-6">
 				<FilterButton
 					name={'시설찾기'}
-					icon={<FontAwesomeIcon icon={faHospital} className="w-9 h-9" />}
+					isReady={true}
 					onButtonClick={() => {
-						//
+						router.push('/fac');
 					}}
 				/>
 				<FilterButton
 					name={'요양병원'}
-					icon={<FontAwesomeIcon icon={faHospital} className="w-9 h-9" />}
+					isReady={true}
 					onButtonClick={() => {
-						//
+						router.push('/fac');
 					}}
 				/>
-				<FilterButton
-					name={'요양원'}
-					icon={<FontAwesomeIcon icon={faHospital} className="w-9 h-9" />}
-					onButtonClick={() => {
-						//
-					}}
-				/>
-				<FilterButton
-					name={'실버타운'}
-					icon={<FontAwesomeIcon icon={faHospital} className="w-9 h-9" />}
-					onButtonClick={() => {
-						//
-					}}
-				/>
-				<FilterButton
-					name={'양로원'}
-					icon={<FontAwesomeIcon icon={faHospital} className="w-9 h-9" />}
-					onButtonClick={() => {
-						//
-					}}
-				/>
-				<FilterButton
-					name={'주야간보호'}
-					icon={<FontAwesomeIcon icon={faHospital} className="w-9 h-9" />}
-					onButtonClick={() => {
-						//
-					}}
-				/>
-				<FilterButton
-					name={'단기보호'}
-					icon={<FontAwesomeIcon icon={faHospital} className="w-9 h-9" />}
-					onButtonClick={() => {
-						//
-					}}
-				/>
-				<FilterButton
-					name={'방문요양'}
-					icon={<FontAwesomeIcon icon={faHospital} className="w-9 h-9" />}
-					onButtonClick={() => {
-						//
-					}}
-				/>
+				<FilterButton name={'요양원'} isReady={false} />
+				<FilterButton name={'실버타운'} isReady={false} />
+				<FilterButton name={'양로원'} isReady={false} />
+				<FilterButton name={'주야간보호'} isReady={false} />
+				<FilterButton name={'단기보호'} isReady={false} />
+				<FilterButton name={'방문요양'} isReady={false} />
 			</div>
 			<Line />
 			<div className="flex flex-col sm:px-4">
@@ -182,20 +146,37 @@ const FaqItem = ({ title, content }: FaqItemProps) => {
 
 interface FilterButtonProps {
 	name: string;
-	icon: JSX.Element;
-	onButtonClick: () => void;
+	isReady?: boolean;
+	providedStyle?: string;
+	onButtonClick?: () => void;
 }
-const FilterButton = ({ name, icon, onButtonClick }: FilterButtonProps) => {
+const FilterButton = ({ name, isReady, providedStyle, onButtonClick }: FilterButtonProps) => {
 	return (
-		<button className="flex flex-col items-center space-y-1" onClick={onButtonClick}>
-			{icon}
-			<span className="text-[12px]">{name}</span>
+		<button
+			className={cls(
+				'flex flex-col py-3 items-center space-y-1 rounded-12',
+				isReady ? 'hover:scale-95 hover:bg-zinc-100' : 'cursor-default',
+				providedStyle
+			)}
+			onClick={
+				isReady
+					? onButtonClick
+					: () => {
+							alert(`${name} 리스트를 준비중입니다`);
+					  }
+			}
+		>
+			<FontAwesomeIcon icon={faHospital} className={cls('w-9 h-9', isReady ? '' : 'text-zinc-300')} />
+			<span className={cls('text-[12px]', isReady ? '' : 'text-zinc-300')}>{name}</span>
 		</button>
 	);
 };
 
-export const Line = () => {
-	return <div className="w-full h-[8px] bg-zinc-100 my-8"></div>;
+interface LineProps {
+	providedStyle?: string;
+}
+export const Line = ({ providedStyle }: LineProps) => {
+	return <div className={cls('w-full h-[8px] bg-zinc-100 my-8', providedStyle)}></div>;
 };
 
 interface MainTitleProps {
