@@ -1,11 +1,9 @@
 import { faChevronLeft, faHouse, faQ, faShareNodes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRouter } from 'next/router';
-import { Line } from '..';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../libs/supabaseClient';
-import { Tables } from '../../database.types';
-import { cls, formatRelativeTime, LineBreaker } from '../../libs/utility';
+import { formatRelativeTime, LineBreaker } from '../../libs/utility';
 import { useInput } from '../../libs/hooks/useInput';
 import { AdviceComment, AdviceDetail, loginUserState, needLoginState } from '../../libs/store';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
