@@ -3,7 +3,7 @@ import ApiHelper from '../../libs/server/api.helper';
 import { Facility, loginUserState, MyKey } from '../../libs/store';
 import { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
-import { HospitalInfo, updateLikedFacs } from '.';
+import { HospitalInfo, thirdPartyAPIAddress, updateLikedFacs } from '.';
 import { useRouter } from 'next/router';
 
 const FacIndexPage = () => {
@@ -24,7 +24,7 @@ const FacIndexPage = () => {
 			};
 
 			const res = await ApiHelper.GetAsync({
-				path: 'https://openapi.gg.go.kr/RecuperationHospital',
+				path: thirdPartyAPIAddress,
 				query
 			});
 

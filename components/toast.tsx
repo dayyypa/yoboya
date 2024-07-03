@@ -1,6 +1,6 @@
 import { useRecoilState } from 'recoil';
-import { ToastState } from './layout';
 import { cls, LineBreaker } from '../libs/utility';
+import { ToastState } from '../pages/layout';
 
 interface ToastProps {
 	title: string;

@@ -10,15 +10,15 @@ import { cls } from '../libs/utility';
 import { atom, useRecoilState } from 'recoil';
 import { signInWithGoogle, supabase } from '../libs/supabaseClient';
 import { loginUserState, needLoginState } from '../libs/store';
-import Toast from './toast';
-import { BasicPopup } from './basicPopup';
+import { BasicPopup } from '../components/basicPopup';
+import Toast from '../components/toast';
 
 interface LayoutProps extends PropsWithChildren {
 	//
 	hideNavigation?: boolean;
 }
 
-export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
+const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 	const router = useRouter();
 	const [loginUser, setLoginUser] = useRecoilState(loginUserState);
 	const [needLogin, setNeedLogin] = useRecoilState<boolean>(needLoginState);
@@ -140,6 +140,8 @@ export const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 		</>
 	);
 };
+
+export default Layout;
 
 interface NaviButtonProps {
 	type: 'home' | 'fac' | 'advice' | 'my';

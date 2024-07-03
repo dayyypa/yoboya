@@ -4,13 +4,13 @@ import { useQuery } from 'react-query';
 import ApiHelper from '../../libs/server/api.helper';
 import { Facility, loginUserState, MyKey, needLoginState, UserInfo } from '../../libs/store';
 import { cls } from '../../libs/utility';
-import MyMap from '../../components/Map';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BasicButton } from '../../components/basicButton';
 import { faHeart } from '@fortawesome/free-regular-svg-icons';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { supabase } from '../../libs/supabaseClient';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
 
 const facCityList = [
 	{ value: '-1', name: '지역' },
@@ -28,6 +28,8 @@ const facCityList = [
 ];
 
 export const thirdPartyAPIAddress = 'https://openapi.gg.go.kr/RecuperationHospital';
+const MyMap = dynamic(() => import('../../components/Map'), { ssr: false });
+
 const FacIndexPage = () => {
 	const router = useRouter();
 	const [loginUser] = useRecoilState(loginUserState);
@@ -209,7 +211,7 @@ export const HospitalInfo = ({ isLiked = true, item, onLikeClick }: HospitalInfo
 
 	return (
 		<div className="w-full p-2 select-none">
-			<div className="flex items-center w-full">
+			<div className="flex items-center w-full space-x-2">
 				<div className="flex flex-col w-full space-y-2">
 					<div className="flex items-center justify-between w-full">
 						<div className="text-[24px] font-bold">{item?.BIZPLC_NM}</div>

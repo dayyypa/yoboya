@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { ReactElement, ReactNode } from 'react';
 import React from 'react';
 import { NextPage } from 'next';
-import { Layout } from '../components/cover';
+import Layout from './layout';
 
 const queryClient = new QueryClient({
 	defaultOptions: {

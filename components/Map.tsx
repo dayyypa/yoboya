@@ -16,6 +16,9 @@ interface MyMapProps {
 }
 
 const MyMap: React.FC<MyMapProps> = ({ latitude, longitude }) => {
+	if (typeof window === 'undefined') {
+		return null;
+	}
 	if (!latitude || !longitude) {
 		return <></>;
 	}
