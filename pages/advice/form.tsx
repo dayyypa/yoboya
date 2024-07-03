@@ -1,11 +1,11 @@
-import { ReactElement, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useInput } from '../../libs/hooks/useInput';
-import { Layout, ToastState } from '../../components/layout';
 import { BasicButton } from '../../components/basicButton';
 import { cls } from '../../libs/utility';
 import { useRouter } from 'next/router';
 import { supabase } from '../../libs/supabaseClient';
 import { useSetRecoilState } from 'recoil';
+import Layout, { ToastState } from '../layout';
 
 const AdviceForm = () => {
 	const router = useRouter();
