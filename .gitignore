@@ -52,12 +52,3 @@ yarn.lock
 
 # log files
 *.log
-
-# excluding all other files except source code
-*
-!*.js
-!*.js
-!*.ts
-!*.tsx
-!*.json
-!README.md

@@ -241,13 +241,12 @@ export const HospitalInfo = ({ isLiked = true, item, onLikeClick }: HospitalInfo
 						<Tag text={`의료인 ${item?.MEDSTAF_CNT}명`} />
 					</div>
 				</div>
-				{/* <div className="-z-10">
+				<div className="-z-10">
 					<MyMap
 						latitude={item?.REFINE_WGS84_LAT ? parseFloat(item?.REFINE_WGS84_LAT) : undefined}
 						longitude={item?.REFINE_WGS84_LOGT ? parseFloat(item?.REFINE_WGS84_LOGT) : undefined}
 					/>
-				</div> */}
-				{/* <div className="w-[130px] h-[130px] rounded-lg bg-zinc-100 shrink-0 rounded-8"></div> */}
+				</div>
 			</div>
 		</div>
 	);
