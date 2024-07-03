@@ -1,13 +1,15 @@
-import { ReactElement, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useInput } from '../../libs/hooks/useInput';
 import { BasicButton } from '../../components/basicButton';
 import { cls } from '../../libs/utility';
 import { useRouter } from 'next/router';
 import { supabase } from '../../libs/supabaseClient';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import Layout, { ToastState } from '../layout';
+import { loginUserState } from '../../libs/store';
 
 const AdviceForm = () => {
+	const loginUser = useRecoilValue(loginUserState);
 	const router = useRouter();
 	const titleInput = useInput({ defaultValue: '' });
 	const contentInput = useInput({ defaultValue: '' });
@@ -46,6 +48,10 @@ const AdviceForm = () => {
 			}, 800);
 		}
 	};
+
+	if (!loginUser) {
+		return <div>접근 불가능한 페이지입니다</div>;
+	}
 
 	return (
 		<div className="relative flex flex-col w-full h-[100vh] pt-10">
